@@ -2,7 +2,7 @@ name: clang-tools-10_macosx-amd64
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build-and-deploy:
