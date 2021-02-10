@@ -15,6 +15,7 @@ jobs:
         wget https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.1/llvm-project-11.0.1.src.tar.xz
         $env:Path = "C:\Program Files\Git\usr\bin;$env:Path"
         tar.exe xf llvm-project-11.0.1.src.tar.xz --exclude=llvm-project-11.0.1.src/clang/test/Driver/Inputs/* --exclude=llvm-project-11.0.1.src/libcxx/test/std/input.output/filesystems/Inputs/static_test_env/*
+        mv llvm-project-11.0.1.src llvm-project-11.0.1
         Get-Content windows-clang-9-10-trivially-copyable-mismatch.patch | patch.exe llvm-project-11.0.1/llvm/cmake/config-ix.cmake
     - name: make build directory
       run: mkdir -p llvm-project-11.0.1/build
@@ -24,17 +25,17 @@ jobs:
       run: cd llvm-project-11.0.1/build && cmake --build . --config MinSizeRel --target clang-format clang-tidy
     - name: rename output binary
       run: |
-        mv llvm-project-11.0.1\build\MinSizeRel\bin\clang-format.exe llvm-project-11.0.1\build\MinSizeRel\bin\clang-format-10_windows-amd64.exe
-        mv llvm-project-11.0.1\build\MinSizeRel\bin\clang-tidy.exe llvm-project-11.0.1\build\MinSizeRel\bin\clang-tidy-10_windows-amd64.exe
+        mv llvm-project-11.0.1\build\MinSizeRel\bin\clang-format.exe llvm-project-11.0.1\build\MinSizeRel\bin\clang-format-11_windows-amd64.exe
+        mv llvm-project-11.0.1\build\MinSizeRel\bin\clang-tidy.exe llvm-project-11.0.1\build\MinSizeRel\bin\clang-tidy-11_windows-amd64.exe
     - name: create and print sha512sum
       run: |
         $env:Path = "C:\Program Files\Git\usr\bin;$env:Path"
         cd llvm-project-11.0.1\build\MinSizeRel\bin
-        sha512sum.exe clang-format-10_windows-amd64.exe > clang-format-10_windows-amd64.exe.sha512sum
-        sha512sum.exe clang-tidy-10_windows-amd64.exe > clang-tidy-10_windows-amd64.exe.sha512sum
+        sha512sum.exe clang-format-11_windows-amd64.exe > clang-format-11_windows-amd64.exe.sha512sum
+        sha512sum.exe clang-tidy-11_windows-amd64.exe > clang-tidy-11_windows-amd64.exe.sha512sum
         echo "Checksums are: "
-        Get-Content -Path clang-format-10_windows-amd64.exe.sha512sum
-        Get-Content -Path clang-tidy-10_windows-amd64.exe.sha512sum
+        Get-Content -Path clang-format-11_windows-amd64.exe.sha512sum
+        Get-Content -Path clang-tidy-11_windows-amd64.exe.sha512sum
     - name: upload release
       uses: xresloader/upload-to-github-release@v1
       env:
