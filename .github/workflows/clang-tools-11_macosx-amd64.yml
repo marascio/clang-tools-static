@@ -1,0 +1,43 @@
+name: clang-tools-11_macosx-amd64
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: get llvm-project
+      run: |
+        wget https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.1/llvm-project-11.0.1.src.tar.xz
+        tar xf llvm-project-11.0.1.src.tar.xz
+    - name: make build directory
+      run: mkdir -p llvm-project-11.0.1.src/build
+    - name: cmake
+      run: cd llvm-project-11.0.1.src/build && cmake ../llvm -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_CXX_FLAGS_MINSIZEREL="-Os -s -DNDEBUG -static-libgcc -static-libstdc++ -flto" -DCMAKE_C_COMPILER=gcc-8 -DCMAKE_CXX_COMPILER=g++-8 -DCMAKE_OSX_DEPLOYMENT_TARGET=10.9
+    - name: build
+      run: cd llvm-project-11.0.1.src/build && make clang-format clang-tidy -j$(sysctl -n hw.ncpu)
+    - name: print dependencies
+      run: otool -L llvm-project-11.0.1.src/build/bin/clang-format
+    - name: rename output binary
+      run: |
+        cd llvm-project-11.0.1.src/build/bin
+        mv clang-format clang-format-11_macosx-amd64
+        mv clang-tidy clang-tidy-11_macosx-amd64
+    - name: create and print sha512sum
+      run: |
+        cd llvm-project-11.0.1.src/build/bin
+        shasum -a512 clang-format-11_macosx-amd64 > clang-format-11_macosx-amd64.sha512sum
+        shasum -a512 clang-tidy-11_macosx-amd64 > clang-tidy-11_macosx-amd64.sha512sum
+        echo "Checksums are: "
+        cat clang-format-11_macosx-amd64.sha512sum
+        cat clang-tidy-11_macosx-amd64.sha512sum
+    - name: upload release
+      uses: xresloader/upload-to-github-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        file: "llvm-project-11.0.1.src/build/bin/clang-*-11_macosx-amd64*"
+        draft: true
